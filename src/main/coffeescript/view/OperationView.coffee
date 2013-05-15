@@ -109,10 +109,20 @@ class OperationView extends Backbone.View
 
         console.log(bodyParam)
       else if isFormPost
-        bodyParam = new FormData()
-        for param in @model.parameters
-          if map[param.name]?
-            bodyParam.append(param.name, map[param.name])
+        if @model.httpMethod is 'put'
+            bodyParam = null
+            for param in @model.parameters
+              if param.paramType is 'form' and map[param.name]?
+                formParam = encodeURIComponent(param.name) + '=' + encodeURIComponent(map[param.name])
+                if bodyParam
+                    bodyParam = bodyParam + '&' + formParam
+                else
+                    bodyParam = formParam
+        else
+            bodyParam = new FormData()
+            for param in @model.parameters
+              if param.paramType is 'form' and map[param.name]?
+                bodyParam.append(param.name, map[param.name])
       else
         bodyParam = null
         for param in @model.parameters
@@ -159,6 +169,11 @@ class OperationView extends Backbone.View
       if not obj.data or (obj.type is 'GET' or obj.type is 'DELETE')
         obj.contentType = false
 
+      log 'method is = ' + obj.type
+      
+      if obj.type is 'put'
+        obj.contentType = 'application/x-www-form-urlencoded'
+        
       log 'content type is now = ' + obj.contentType
 
       responseContentTypeField = $('.content > .content-type > div > select[name=contentType]', $(@el)).val()
