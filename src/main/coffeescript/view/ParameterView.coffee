@@ -38,6 +38,8 @@ class ParameterView extends Backbone.View
   template: ->
     if @model.isList
       Handlebars.templates.param_list
+    else if @model.paramType == 'dynamic'
+      Handlebars.templates.param_dynamic
     else
       if @options.readOnly
         if @model.required
