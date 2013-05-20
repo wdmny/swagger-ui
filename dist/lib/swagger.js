@@ -647,17 +647,29 @@
     };
 
     SwaggerOperation.prototype.getMatchingParams = function(paramTypes, args, includeApiKey) {
-      var matchingParams, name, value, _ref;
+      var matchingParams, name, param, value, _i, _len, _ref, _ref1;
       matchingParams = {};
-      delete args['undefined'];
-      matchingParams = args;
+      _ref = this.parameters;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        param = _ref[_i];
+        if ((jQuery.inArray(param.paramType, paramTypes) >= 0) && args[param.name]) {
+          matchingParams[param.name] = args[param.name];
+        }
+      }
+      if (this.isGetMethod) {
+        for (param in args) {
+          if (param !== 'undefined') {
+            matchingParams[param] = args[param];
+          }
+        }
+      }
       if (includeApiKey && (this.resource.api.api_key != null) && this.resource.api.api_key.length > 0) {
         matchingParams[this.resource.api.apiKeyName] = this.resource.api.api_key;
       }
       if (jQuery.inArray('header', paramTypes) >= 0) {
-        _ref = this.resource.api.headers;
-        for (name in _ref) {
-          value = _ref[name];
+        _ref1 = this.resource.api.headers;
+        for (name in _ref1) {
+          value = _ref1[name];
           matchingParams[name] = value;
         }
       }

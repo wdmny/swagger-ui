@@ -1056,7 +1056,8 @@ helpers = helpers || Handlebars.helpers; data = data || {};
 (function() {
   var ContentTypeView, HeaderView, MainView, OperationView, ParameterView, ResourceView, SignatureView, StatusCodeView, SwaggerUi,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   SwaggerUi = (function(_super) {
 
@@ -1401,7 +1402,7 @@ helpers = helpers || Handlebars.helpers; data = data || {};
     };
 
     OperationView.prototype.submitOperation = function(e) {
-      var bodyParam, consumes, error_free, form, headerParams, invocationUrl, isFileUpload, isFormPost, map, o, obj, param, paramContentTypeField, responseContentTypeField, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4,
+      var bodyParam, bodyParamNames, consumes, error_free, form, headerParams, invocationUrl, isFileUpload, isFormPost, map, o, obj, param, paramContentTypeField, responseContentTypeField, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4,
         _this = this;
       if (e != null) {
         e.preventDefault();
@@ -1450,8 +1451,19 @@ helpers = helpers || Handlebars.helpers; data = data || {};
             consumes = "application/json";
           }
         }
+        bodyParamNames = [];
         if (isFileUpload) {
           bodyParam = new FormData();
+          bodyParamNames = (function() {
+            var _k, _len2, _ref2, _results;
+            _ref2 = this.model.parameters;
+            _results = [];
+            for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+              param = _ref2[_k];
+              _results.push(param.name);
+            }
+            return _results;
+          }).call(this);
           _ref2 = this.model.parameters;
           for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
             param = _ref2[_k];
@@ -1465,6 +1477,16 @@ helpers = helpers || Handlebars.helpers; data = data || {};
           console.log(bodyParam);
         } else if (isFormPost) {
           bodyParam = new FormData();
+          bodyParamNames = (function() {
+            var _l, _len3, _ref3, _results;
+            _ref3 = this.model.parameters;
+            _results = [];
+            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+              param = _ref3[_l];
+              _results.push(param.name);
+            }
+            return _results;
+          }).call(this);
           _ref3 = this.model.parameters;
           for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
             param = _ref3[_l];
@@ -1478,11 +1500,18 @@ helpers = helpers || Handlebars.helpers; data = data || {};
           for (_m = 0, _len4 = _ref4.length; _m < _len4; _m++) {
             param = _ref4[_m];
             if (param.paramType === 'body') {
+              bodyParamNames = [param.name];
               bodyParam = map[param.name];
             }
           }
         }
-        log("bodyParam = " + bodyParam);
+        if (this.model.httpMethod !== 'get') {
+          for (param in map) {
+            if (__indexOf.call(bodyParamNames, param) < 0) {
+              bodyParam.append(param, map[param]);
+            }
+          }
+        }
         headerParams = null;
         invocationUrl = this.model.supportHeaderParams() ? (headerParams = this.model.getHeaderParams(map), this.model.urlify(map, false)) : this.model.urlify(map, true);
         log('submitting ' + invocationUrl);

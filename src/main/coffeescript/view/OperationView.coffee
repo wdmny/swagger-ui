@@ -94,9 +94,13 @@ class OperationView extends Backbone.View
         else if @model.httpMethod.toLowerCase() == "post" and isFormPost is false
           consumes = "application/json"
 
+      bodyParamNames = []
+
       if isFileUpload
         # requires HTML5 compatible browser
         bodyParam = new FormData()
+
+        bodyParamNames = (param.name for param in @model.parameters)
 
         # add params except file
         for param in @model.parameters
@@ -110,6 +114,9 @@ class OperationView extends Backbone.View
         console.log(bodyParam)
       else if isFormPost
         bodyParam = new FormData()
+
+        bodyParamNames = (param.name for param in @model.parameters)
+
         for param in @model.parameters
           if map[param.name]?
             bodyParam.append(param.name, map[param.name])
@@ -117,9 +124,14 @@ class OperationView extends Backbone.View
         bodyParam = null
         for param in @model.parameters
           if param.paramType is 'body'
+            bodyParamNames = [param.name]
             bodyParam = map[param.name]
 
-      log "bodyParam = " + bodyParam 
+      # Append dynamic fields to FormData params if not get request
+      if @model.httpMethod != 'get'
+        for param of map
+          if param not in bodyParamNames
+            bodyParam.append(param, map[param])
 
       headerParams = null
       invocationUrl = 
